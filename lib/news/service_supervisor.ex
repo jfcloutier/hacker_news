@@ -18,8 +18,8 @@ It is itself supervised by the Phoenix supervisor.
 	@spec init(any) :: {:ok, tuple}
 	def init(_) do
 		children = [	
-								 worker(News.HackerNewsService, []),
-								 worker(News.TranslationBureau, [])
+								 worker(News.Hacker, []),
+								 worker(News.Translation, [])
 					   ]
 		opts = [strategy: :one_for_one]
 		supervise(children, opts)

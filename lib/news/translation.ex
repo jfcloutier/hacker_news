@@ -1,4 +1,4 @@
-defmodule News.TranslationBureau do
+defmodule News.Translation do
 	@moduledoc """
 A translation bureau that relies on a network of translators.
 """
@@ -23,7 +23,7 @@ A translation bureau that relies on a network of translators.
   end
 
 	def translate(text, to) do
-		GenServer.call(@name, {:translate, text, to})
+		GenServer.call(@name, {:translate, text, to}, 20_000)
   end
 
 	def handle_call({:translate, text, to}, caller, state) do
