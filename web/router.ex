@@ -21,6 +21,6 @@ defmodule News.Router do
 	scope "/api", News do
 		pipe_through :api
 
-		resources "/titles", TitlesController, only: [:index]
+		resources "/stories", StoriesController, only: [:index]
   end
 end

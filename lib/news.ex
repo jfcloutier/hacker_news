@@ -9,7 +9,7 @@ defmodule News do
     children = [
       # Start the endpoint when the application starts
       supervisor(News.Endpoint, []),
-			supervisor(News.ServiceSupervisor, [])
+			supervisor(News.ServicesSupervisor, [])
     ]
 
     # See http://elixir-lang.org/docs/stable/elixir/Supervisor.html

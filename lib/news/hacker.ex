@@ -11,20 +11,20 @@ An agent responsible for retrieving top stories from Hacker News
 
 	def start_link() do
 	  Logger.debug( "Starting Hacker News Service" )
-		{:ok, _pid} = Agent.start_link(fn -> fetch_top_stories() end, [name: @name, timeout: 10_000])
+		{:ok, _pid} = Agent.start_link(fn -> fetch_top_story_ids() end, [name: @name, timeout: 20_000])
 	end
- 
+	
   # Languages reference: https://cloud.google.com/translate/v2/using_rest#language-params
-	def get(count, index, prop, language \\ nil) do
-		items = collect(index, count, prop)
+	def get(count, index, language \\ nil) do
+		stories = collect(count, index)
 		if language == nil or language == "en" do
-			items
+			stories
 		else
-			items
-			|> Enum.map(fn(story) -> 
-										News.Translation.translate(story, language) 
-									end)
-			|> Enum.map(fn({_, translation} = response) -> translation end)
+			stories
+			|> map_reduce(fn(story) -> 
+										 {story, News.Translation.translate(story["title"], language)} 
+									 end)
+			|> Enum.map(fn({story, {_,translation}} = response) -> %{story|"title" => translation} end)
 		end
 	end
 
@@ -34,7 +34,7 @@ An agent responsible for retrieving top stories from Hacker News
 		Agent.get(@name, &(&1))
 	end
 
-	defp fetch_top_stories do
+	defp fetch_top_story_ids do
 		ExFirebase.set_url("https://hacker-news.firebaseio.com/v0/")
 		top_ids = ExFirebase.get( "topstories" )
 		Logger.debug( "#{inspect top_ids}" )
@@ -49,28 +49,48 @@ An agent responsible for retrieving top stories from Hacker News
 			@name,
 			fn(stories) ->
 				cached_story = Dict.get(stories, id, nil)
-				if cached_story == nil do
-					Logger.debug("Fetching story #{id}")
-					story = ExFirebase.get("item/#{id}")
-					{story, Dict.put(stories, id, story)}
+				if cached_story == nil or cached_story["id"] == -1 do
+          try do
+						Logger.debug("Fetching story #{id}")
+						story = ExFirebase.get("item/#{id}")
+						{story, Dict.put(stories, id, story)}
+          catch
+						error -> Logger.debug("Failed to retrieve story: #{inspect error}")
+							       story = %{"id" => -1, "url" => "", "title" => "Failed to retrieve story", "score" => 0}
+										 {story, Dict.put(stories, id, story)}
+				  end
 				else 
 				{cached_story, stories}
 				end
-			end
+			end,
+			:infinity
 		)
 	end
 
-	defp collect(index, count, prop) do 
-		true = prop in ["id", "by", "type", "title", "url", "text", "kids", "score", "parent", "time"]
+	defp collect(count, index) do 
 		try do
-			Stream.drop(get_stories(), index)
-			|> Stream.take(count)
-		  |> Stream.map(fn({story_id, _story}) -> story_id end)
-		  |> Stream.map(fn(story_id) -> fetch(story_id)[prop] end)
-      |> Enum.map(&(&1))
+      get_stories()
+			|> Enum.drop(index)
+			|> Enum.take(count)
+		  |> Enum.map(fn({story_id, _story}) -> story_id end)
+      |> Enum.to_list
+		  |> map_reduce(fn(story_id) -> fetch(story_id) end)
     rescue
-			_ -> Logger.error("Access to HN on Firebase failed"); []
+			_ -> Logger.error("Failed to collect stories"); []
     end
 	end
+
+  def map_reduce(collection, function) do
+    me = self
+    collection
+    |> Enum.map(fn(elem) -> 
+									spawn_link(fn -> 
+														 (send me, { self, function.(elem) }) 
+														 end) 
+								end) 
+    |> Enum.map(fn(pid) ->  
+									receive do { ^pid, result } -> result end 
+								end)
+  end
 
 end

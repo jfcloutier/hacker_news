@@ -9,18 +9,20 @@
 
     <script src="/js/angular.js" type="text/javascript"></script>
     <script src="/js/angular-resource.js" type="text/javascript"></script>
-
+    <script src="/js/angular-animate.js" type="text/javascript"></script>
+    <script src="/js/loading-bar.js" type="text/javascript"></script>
     <title>Hacker News Translator</title>
     <link rel="stylesheet" href="/css/phoenix.css">
+    <link href="/css/loading-bar.css" rel="stylesheet" />
   </head>
 
   <body>
     <div class="container">
       <%= @inner %>
       <div class="footer">
-        <p><a href="http://http://www.meetup.com/Portland-Erlang-Elixir/">Portland (Maine) Erlang and Elixir meetup</a></p>
+        <p><a href="http://www.meetup.com/Portland-Erlang-Elixir/" target="blank">Portland (Maine) Erlang and Elixir Meetup</a></p>
       </div>
 
-    </div> <!-- /container -->
+    </div>
   </body>
 </html>

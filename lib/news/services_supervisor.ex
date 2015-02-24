@@ -1,4 +1,4 @@
-defmodule News.ServiceSupervisor do
+defmodule News.ServicesSupervisor do
 	@moduledoc """
 News' top supervisor.
 It is itself supervised by the Phoenix supervisor.
@@ -11,7 +11,7 @@ It is itself supervised by the Phoenix supervisor.
 
 	@spec start_link() :: {:ok, pid}
   def start_link() do
-		Logger.debug "Starting service supervisor"
+		Logger.debug "Starting services supervisor"
 		{:ok, _pid} = Supervisor.start_link(@name, [], [name: @name])
 	end 
 

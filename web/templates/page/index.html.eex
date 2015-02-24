@@ -6,19 +6,20 @@
 
 <div ng-app="HackerNews">
   <div ng-controller="HackerNewsController">
-    Get the top <input type="number"
-		       step="1" 
-		       min="0"
-		       max="10"
-		       ng-model="count"
-		       ng-change= "onChange()"/> news items
-    <ul style="margin: 10px 0 10px 0">
-      <li ng-repeat="item in items">{{item.title}}</li>
-    </ul>
-    <div>
-    Show them in <select ng-model="language" 
-			 ng-options="l for l in languages"
-			 ng-change= "onChange()"></select>
+    Get me the top <input type="number"
+			  step="1" 
+			  min="0"
+			  max="100"
+			  ng-model="count"/> news stories
+    and list them in <select ng-model="language" 
+			     ng-options="l.name for l in languages"></select>
+    <input type="button" ng-click="onChange()" value="Go" style="float:right"/>
+    <div style="margin: 10px 0 20px 0">
+      <ul>
+	<li ng-repeat="story in stories">
+	  <a href={{story.url}} target="blank">{{story.title}}</a> <span style="color:LightGray">({{story.score}})</span>
+	</li>
+      </ul>      
     </div>
   </div>
 </div>
