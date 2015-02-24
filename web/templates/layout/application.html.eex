@@ -7,23 +7,18 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Hello Phoenix!</title>
+    <script src="/js/angular.js" type="text/javascript"></script>
+    <script src="/js/angular-resource.js" type="text/javascript"></script>
+
+    <title>Hacker News Translator</title>
     <link rel="stylesheet" href="/css/phoenix.css">
   </head>
 
   <body>
     <div class="container">
-      <div class="header">
-        <ul class="nav nav-pills pull-right">
-          <li><a href="http://www.phoenixframework.org/docs">Get Started</a></li>
-        </ul>
-        <span class="logo"></span>
-      </div>
-
       <%= @inner %>
-
       <div class="footer">
-        <p><a href="http://phoenixframework.org">phoenixframework.org</a></p>
+        <p><a href="http://http://www.meetup.com/Portland-Erlang-Elixir/">Portland (Maine) Erlang and Elixir meetup</a></p>
       </div>
 
     </div> <!-- /container -->

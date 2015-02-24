@@ -14,10 +14,10 @@ An agent responsible for retrieving top stories from Hacker News
 		{:ok, _pid} = Agent.start_link(fn -> fetch_top_stories() end, [name: @name, timeout: 10_000])
 	end
  
-  # Langueg reference: https://cloud.google.com/translate/v2/using_rest#language-params
+  # Languages reference: https://cloud.google.com/translate/v2/using_rest#language-params
 	def get(count, index, prop, language \\ nil) do
 		items = collect(index, count, prop)
-		if language == nil do
+		if language == nil or language == "en" do
 			items
 		else
 			items
@@ -50,6 +50,7 @@ An agent responsible for retrieving top stories from Hacker News
 			fn(stories) ->
 				cached_story = Dict.get(stories, id, nil)
 				if cached_story == nil do
+					Logger.debug("Fetching story #{id}")
 					story = ExFirebase.get("item/#{id}")
 					{story, Dict.put(stories, id, story)}
 				else 

@@ -40,7 +40,7 @@ A translation bureau that relies on a network of translators.
 		result = find_available_translator()
 		case result do
 			{:ok, pid} ->
-				GenServer.call(pid, {:translate, text, to, key})
+				GenServer.call(pid, {:translate, text, to, key}, 10_000)
 		  {:error, message} ->
 				Logger.error(message)
 				{:error, message}

@@ -18,8 +18,9 @@ defmodule News.Router do
     get "/", PageController, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", News do
-  #   pipe_through :api
-  # end
+	scope "/api", News do
+		pipe_through :api
+
+		resources "/titles", TitlesController, only: [:index]
+  end
 end
