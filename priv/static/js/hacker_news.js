@@ -17,7 +17,9 @@ hackerNews.constant('Languages', [
     {name: 'English', symbol: 'en'},
     {name: 'Spanish', symbol: 'es'},
     {name: 'French',  symbol: 'fr'},
-    {name: 'German',  symbol: 'de'} 
+    {name: 'German',  symbol: 'de'},
+    {name: 'Russian', symbol: 'ru'},
+    {name: 'Chinese', symbol: 'zh-CN'} 
 ]);
 
 hackerNews.service('HackerNewsModel', function($resource) {

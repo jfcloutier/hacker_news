@@ -6,6 +6,7 @@ An agent responsible for retrieving top stories from Hacker News
 	require Logger
 
 	@name __MODULE__
+	@failed -1
 
 	#### API
 
@@ -15,8 +16,8 @@ An agent responsible for retrieving top stories from Hacker News
 	end
 	
   # Languages reference: https://cloud.google.com/translate/v2/using_rest#language-params
-	def get(count, index, language \\ nil) do
-		stories = collect(count, index)
+	def get(count, language \\ nil) do
+		stories = collect(count)
 		if language == nil or language == "en" do
 			stories
 		else
@@ -24,7 +25,13 @@ An agent responsible for retrieving top stories from Hacker News
 			|> map_reduce(fn(story) -> 
 										 {story, News.Translation.translate(story["title"], language)} 
 									 end)
-			|> Enum.map(fn({story, {_,translation}} = response) -> %{story|"title" => translation} end)
+			|> Enum.map(
+					fn
+					{story, {_,translation}} when is_map(story) -> %{story|"title" => translation}
+				  response -> Logger.debug("Translation failed: #{inspect response}")
+											failed_story()
+          end
+      )
 		end
 	end
 
@@ -49,14 +56,14 @@ An agent responsible for retrieving top stories from Hacker News
 			@name,
 			fn(stories) ->
 				cached_story = Dict.get(stories, id, nil)
-				if cached_story == nil or cached_story["id"] == -1 do
+				if cached_story == nil or cached_story["id"] == @failed do
           try do
 						Logger.debug("Fetching story #{id}")
 						story = ExFirebase.get("item/#{id}")
 						{story, Dict.put(stories, id, story)}
           catch
 						error -> Logger.debug("Failed to retrieve story: #{inspect error}")
-							       story = %{"id" => -1, "url" => "", "title" => "Failed to retrieve story", "score" => 0}
+							       story = failed_story()
 										 {story, Dict.put(stories, id, story)}
 				  end
 				else 
@@ -67,16 +74,20 @@ An agent responsible for retrieving top stories from Hacker News
 		)
 	end
 
-	defp collect(count, index) do 
+	defp failed_story do
+		%{"id" => @failed, "url" => "", "title" => "Failed to retrieve story", "score" => 0}
+  end
+
+	defp collect(count) do 
 		try do
       get_stories()
-			|> Enum.drop(index)
 			|> Enum.take(count)
 		  |> Enum.map(fn({story_id, _story}) -> story_id end)
       |> Enum.to_list
 		  |> map_reduce(fn(story_id) -> fetch(story_id) end)
     rescue
-			_ -> Logger.error("Failed to collect stories"); []
+			_ -> Logger.error("Failed to collect stories")
+     []
     end
 	end
 
@@ -89,7 +100,10 @@ An agent responsible for retrieving top stories from Hacker News
 														 end) 
 								end) 
     |> Enum.map(fn(pid) ->  
-									receive do { ^pid, result } -> result end 
+									receive do { ^pid, result } -> 
+											Logger.debug("Reducing: #{result}")
+											result 
+									end 
 								end)
   end
 

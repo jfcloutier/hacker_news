@@ -8,7 +8,7 @@ defmodule News.StoriesController do
 		Logger.debug("Params: #{inspect params}")
 		%{"count" => s_count, "language" => language} = params
 		count = String.to_integer(s_count)
-	  stories = News.Hacker.get(count, 0, language)
+	  stories = News.Hacker.get(count, language)
 		json conn, stories
 	end
 
