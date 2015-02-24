@@ -15,9 +15,11 @@
     <ul style="margin: 10px 0 10px 0">
       <li ng-repeat="item in items">{{item.title}}</li>
     </ul>
+    <div>
     Show them in <select ng-model="language" 
 			 ng-options="l for l in languages"
 			 ng-change= "onChange()"></select>
+    </div>
   </div>
 </div>
 
