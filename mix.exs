@@ -24,7 +24,8 @@ defmodule News.Mixfile do
   defp deps do
     [{:phoenix, "~> 0.9.0"},
      {:cowboy, "~> 1.0"},
-     {:exfirebase, git: "https://github.com/parroty/exfirebase"}
+     {:exfirebase, git: "https://github.com/parroty/exfirebase"},
+		 {:timex, "~> 0.13.3"}
     ]
   end
 end

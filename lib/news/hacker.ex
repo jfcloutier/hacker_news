@@ -5,18 +5,21 @@ and for farming out the translation of the story titles to a group of translator
 """
 
 	require Logger
+  use Timex
 
 	@name __MODULE__
-	@failed -1
+  @shelf_life 10 # Stories are refreshed every 10 minutes
+	@failed -1 # Story id indicating failure to retrieve story content
 
 	#### API
 
   # The initial state of the Agent is a dictionary of story_id => story_as_map (story is nil at first)
+  # with the time their ids were first retrieved
 	# The state retains the ids of all top stories and acts as a cache of retrieved stories.
 	def start_link() do
 	  Logger.debug( "Starting Hacker News Service" )
 		{:ok, _pid} = Agent.start_link(
-			fn -> fetch_top_story_ids() end, 
+			fn -> {Time.now, fetch_top_story_ids()} end, 
 			[name: @name, timeout: 20_000])
 	end
 
@@ -42,9 +45,17 @@ and for farming out the translation of the story titles to a group of translator
 
 	#### PRIVATE
 
-	# Return the state of the Agent as-is
+	# Return the stories cached in the state of the Agent, refreshed if stale 
 	defp get_stories do
-		Agent.get(@name, &(&1))
+		Agent.get_and_update(@name, 
+												 fn({time, stories}) ->
+													 if Time.elapsed(time, :mins) > @shelf_life do
+														 fresh_stories = fetch_top_story_ids
+														 {fresh_stories, {Time.now, fetch_top_story_ids()}}
+													 else
+														 {stories, {time,stories}}
+													 end
+												 end)
 	end
 
   # Fetch via Firebase the ids of Hacker News' top stories.
@@ -52,7 +63,7 @@ and for farming out the translation of the story titles to a group of translator
 	defp fetch_top_story_ids do
 		ExFirebase.set_url("https://hacker-news.firebaseio.com/v0/")
 		top_ids = ExFirebase.get( "topstories" )
-		Logger.debug( "#{inspect top_ids}" )
+		Logger.debug( "Top story ids: \n#{inspect top_ids}" )
 		Enum.reduce(top_ids, 
 								HashDict.new,
 			fn(id, dict) -> Dict.put(dict, id, nil) end
@@ -72,20 +83,20 @@ and for farming out the translation of the story titles to a group of translator
 	defp fetch(id) do
 		Agent.get_and_update(
 			@name,
-			fn(stories) ->
+			fn({time,stories}) ->
 				cached_story = Dict.get(stories, id, nil)
 				if cached_story == nil or cached_story["id"] == @failed do
           try do
 						Logger.debug("Fetching story #{id}")
 						story = ExFirebase.get("item/#{id}")
-						{story, Dict.put(stories, id, story)} # return story and updated Agent state
+						{story, {time, Dict.put(stories, id, story)}} # return story and updated Agent state
           catch
 						kind,error -> Logger.debug("Failed to retrieve story: #{inspect kind} , #{inspect error}")
 													story = failed_story()
-													{story, Dict.put(stories, id, story)}
+													{story, {time, Dict.put(stories, id, story)}}
 				  end
 				else 
-				{cached_story, stories} # return cached story and unmodified Agent state
+				{cached_story, {time, stories}} # return cached story and unmodified Agent state
 				end
 			end,
 			:infinity
