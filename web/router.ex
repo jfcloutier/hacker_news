@@ -13,7 +13,7 @@ defmodule News.Router do
   end
 
   scope "/", News do
-    pipe_through :browser # Use the default browser stack
+    pipe_through :browser
 
     get "/", PageController, :index
   end

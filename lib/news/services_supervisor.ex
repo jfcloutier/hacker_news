@@ -1,7 +1,7 @@
 defmodule News.ServicesSupervisor do
 	@moduledoc """
 News' top supervisor.
-It is itself supervised by the Phoenix supervisor.
+It is supervised by the Phoenix supervisor.
 """
 	@name __MODULE__
 	use Supervisor
@@ -18,8 +18,8 @@ It is itself supervised by the Phoenix supervisor.
 	@spec init(any) :: {:ok, tuple}
 	def init(_) do
 		children = [	
-								 worker(News.Hacker, []),
-								 worker(News.Translation, [])
+								 worker(News.Hacker, []), # An Agent retrieving news
+								 worker(News.Translation, []) # A GenServer acting as a translation agency
 					   ]
 		opts = [strategy: :one_for_one]
 		supervise(children, opts)

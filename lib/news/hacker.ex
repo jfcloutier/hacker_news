@@ -1,6 +1,7 @@
 defmodule News.Hacker do
 	@moduledoc """
-An agent responsible for retrieving top stories from Hacker News
+An agent responsible for retrieving top stories from Hacker News via Firebase 
+and for farming out the translation of the story titles to a group of translator nodes.
 """
 
 	require Logger
@@ -10,37 +11,44 @@ An agent responsible for retrieving top stories from Hacker News
 
 	#### API
 
+  # The initial state of the Agent is a dictionary of story_id => story_as_map (story is nil at first)
+	# The state retains the ids of all top stories and acts as a cache of retrieved stories.
 	def start_link() do
 	  Logger.debug( "Starting Hacker News Service" )
-		{:ok, _pid} = Agent.start_link(fn -> fetch_top_story_ids() end, [name: @name, timeout: 20_000])
+		{:ok, _pid} = Agent.start_link(
+			fn -> fetch_top_story_ids() end, 
+			[name: @name, timeout: 20_000])
 	end
-	
-  # Languages reference: https://cloud.google.com/translate/v2/using_rest#language-params
+
+  # Get a list of the top 'count' stories and translate their titles, if given a language code	
 	def get(count, language \\ nil) do
-		stories = collect(count)
-		if language == nil or language == "en" do
+		stories = collect(count) # get the stories, making sure their content was retrieved
+		if language == nil or language == "en" do # Don't translate
 			stories
 		else
 			stories
-			|> map_reduce(fn(story) -> 
-										 {story, News.Translation.translate(story["title"], language)} 
-									 end)
-			|> Enum.map(
+			|> map_reduce(fn(story) -> # Delegate to the network of translators (in parallel)
+					{story, News.Translation.translate(story["title"], language)} 
+										end)
+			|> Enum.map( # Replace the original story titles with their translations
 					fn
-					{story, {_,translation}} when is_map(story) -> %{story|"title" => translation}
-				  response -> Logger.debug("Translation failed: #{inspect response}")
-											failed_story()
+						{story, {_,translation}} when is_map(story) -> %{story|"title" => translation}
+						response -> Logger.debug("Translation failed: #{inspect response}")
+												failed_story()
           end
-      )
+				)
 		end
 	end
 
 	#### PRIVATE
 
+	# Return the state of the Agent as-is
 	defp get_stories do
 		Agent.get(@name, &(&1))
 	end
 
+  # Fetch via Firebase the ids of Hacker News' top stories.
+  # Return a dictionary keyed by story id and with nil (story not yet retrieved) as values
 	defp fetch_top_story_ids do
 		ExFirebase.set_url("https://hacker-news.firebaseio.com/v0/")
 		top_ids = ExFirebase.get( "topstories" )
@@ -51,6 +59,16 @@ An agent responsible for retrieving top stories from Hacker News
 		)
 	end
 
+	# Return the top 'count' stories, making sure the contents of each one has been fetched
+	defp collect(count) do 
+    get_stories() # all current top stories, some or all of which may not have been retrieved yet
+		|> Enum.take(count)
+		|> Enum.map(fn({story_id, _story}) -> story_id end)
+		|> map_reduce(fn(story_id) -> fetch(story_id) end) # fetch the content of stories in parallel
+	end
+
+	# Get a story by id, fetching its content if not already done. 
+  # Update the cache of stories (the state of the Agent)
 	defp fetch(id) do
 		Agent.get_and_update(
 			@name,
@@ -60,33 +78,27 @@ An agent responsible for retrieving top stories from Hacker News
           try do
 						Logger.debug("Fetching story #{id}")
 						story = ExFirebase.get("item/#{id}")
-						{story, Dict.put(stories, id, story)}
+						{story, Dict.put(stories, id, story)} # return story and updated Agent state
           catch
 						kind,error -> Logger.debug("Failed to retrieve story: #{inspect kind} , #{inspect error}")
-							       story = failed_story()
-										 {story, Dict.put(stories, id, story)}
+													story = failed_story()
+													{story, Dict.put(stories, id, story)}
 				  end
 				else 
-				{cached_story, stories}
+				{cached_story, stories} # return cached story and unmodified Agent state
 				end
 			end,
 			:infinity
 		)
 	end
 
+	# Story after a failed attempt are retrieving its content
 	defp failed_story do
 		%{"id" => @failed, "url" => "", "title" => "Failed to retrieve story", "score" => 0}
   end
 
-	defp collect(count) do 
-    get_stories()
-			|> Enum.take(count)
-		  |> Enum.map(fn({story_id, _story}) -> story_id end)
-      |> Enum.to_list
-		  |> map_reduce(fn(story_id) -> fetch(story_id) end)
-	end
-
-  def map_reduce(collection, function) do
+  # Parallel mapping of a function on a collection. Results are nonetheless collected in order.
+  defp map_reduce(collection, function) do
     me = self
     collection
     |> Enum.map(fn(elem) -> 
@@ -95,7 +107,7 @@ An agent responsible for retrieving top stories from Hacker News
 														 end) 
 								end) 
     |> Enum.map(fn(pid) ->  
-									receive do { ^pid, result } -> 
+									receive do { ^pid, result } -> # ^pid enforces retrieval in order from mailbox
 											result 
 									end 
 								end)

@@ -1,5 +1,7 @@
+// Module
 var hackerNews = angular.module('HackerNews', [ 'ngResource', 'angular-loading-bar', 'ngAnimate']);
 
+// Controller
 hackerNews.controller('HackerNewsController', function($scope, HackerNewsModel, Languages) {
 
     $scope.count = 0;
@@ -13,6 +15,7 @@ hackerNews.controller('HackerNewsController', function($scope, HackerNewsModel, 
 
 });
 
+// Constants
 hackerNews.constant('Languages', [
     {name: 'English', symbol: 'en'},
     {name: 'Spanish', symbol: 'es'},
@@ -22,16 +25,24 @@ hackerNews.constant('Languages', [
     {name: 'Chinese', symbol: 'zh-CN'} 
 ]);
 
-hackerNews.service('HackerNewsModel', function($resource) {
+// Model
+hackerNews.service('HackerNewsModel', function(HackerNewsServer) {
     var getStories = function(count, language) {
 	if (count == 0) {
 	    return [];
 	} else {
-	    var HackerNewsAPI = $resource('/api/stories');
-            return HackerNewsAPI.query({count: count, language: language.symbol});
+	    var storiesResource = HackerNewsServer.storiesResource;
+            return storiesResource.query({count: count, language: language.symbol});
 	}
     };
 
     return {getStories: getStories};
+});
+
+// REST 
+hackerNews.service('HackerNewsServer', function($resource) {
+    var storiesResource = $resource('/api/stories');
+
+    return {storiesResource: storiesResource} 
 });
 

@@ -17,7 +17,8 @@
     <div style="margin: 10px 0 20px 0">
       <ul>
 	<li ng-repeat="story in stories">
-	  <a href={{story.url}} target="blank">{{story.title}}</a> <span style="color:LightGray">({{story.score}})</span>
+	  <a href={{story.url}} target="blank">{{story.title}}</a> 
+	  <span style="color:LightGray">({{story.score}})</span>
 	</li>
       </ul>      
     </div>

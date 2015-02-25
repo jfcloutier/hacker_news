@@ -1,7 +1,9 @@
 defmodule News.StoriesController do
+
 	use Phoenix.Controller
 	alias Poison, as: JSON
 	require Logger
+
 	plug :action
 
 	def index(conn, params) do

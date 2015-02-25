@@ -13,3 +13,14 @@ To start:
 1. Store your Google API key in a file named 'google_api.key' in the project's home directory
 2. Execute: iex --name something_unique@your_ip_address --cookie oreo -S mix phoenix.server
 3. Visit `localhost:4000` from your browser.
+
+
+JSEX 2.0 bug
+============
+
+ExFirebase depends on an old version (2.0) of JSEX served by Hex. It has a bug.
+
+In deps/jsex/lib/jsex.ex, prepend this clause to format_key/2
+
+  defp format_key(key, { _, :binary, _ }), do: key
+
