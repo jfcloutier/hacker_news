@@ -10,6 +10,7 @@ A translation bureau that relies on a network of translators.
 	@name __MODULE__
 	@group :translators
   @key_file "google_apis.key"
+	@max_tries 3
 
 	def start_link( ) do
 		GenServer.start_link(@name, [], [name: @name])
@@ -22,18 +23,29 @@ A translation bureau that relies on a network of translators.
   end
 
 	def translate(text, to) do
-		GenServer.call(@name, {:translate, text, to}, 20_000)
+		try do
+			GenServer.call(@name, {:translate, text, to}, 10_000)
+    catch
+			kind,error -> 
+				Logger.debug("Translation failed: #{inspect kind}, #{inspect error}")
+				{:error, "Translation failed"}
+    end
   end
 
 	def handle_call({:translate, text, to}, caller, state) do
 		{:ok, key} = get_key(state)
-		spawn( fn ->
-						 result = request_translation(text, to, key)
-						 GenServer.reply(caller, result)
-					 end )
-		{:noreply, %{state|key: key}}
+		try do
+			spawn_link( fn ->
+										result = request_translation(text, to, key)
+										GenServer.reply(caller, result)
+									end )
+			{:noreply, %{state|key: key}}
+    catch 
+			kind,error -> 
+					Logger.debug("Translation failed: #{inspect kind}, #{inspect error}")
+					GenServer.reply(caller, {:error, "Translation failed"})
+    end
   end
-
 
 	defp request_translation(text, to, key) do
 		result = find_available_translator()
@@ -58,7 +70,7 @@ A translation bureau that relies on a network of translators.
 
   defp get_key(%{key: nil} = state) do
 		Logger.debug("Retrieving API key from file")
-		 File.read(@key_file)
+		File.read(@key_file)
   end
 	defp get_key(%{key: key} = state) do
 		{:ok, key}

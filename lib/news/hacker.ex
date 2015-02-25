@@ -62,7 +62,7 @@ An agent responsible for retrieving top stories from Hacker News
 						story = ExFirebase.get("item/#{id}")
 						{story, Dict.put(stories, id, story)}
           catch
-						error -> Logger.debug("Failed to retrieve story: #{inspect error}")
+						kind,error -> Logger.debug("Failed to retrieve story: #{inspect kind} , #{inspect error}")
 							       story = failed_story()
 										 {story, Dict.put(stories, id, story)}
 				  end
@@ -79,16 +79,11 @@ An agent responsible for retrieving top stories from Hacker News
   end
 
 	defp collect(count) do 
-		try do
-      get_stories()
+    get_stories()
 			|> Enum.take(count)
 		  |> Enum.map(fn({story_id, _story}) -> story_id end)
       |> Enum.to_list
 		  |> map_reduce(fn(story_id) -> fetch(story_id) end)
-    rescue
-			_ -> Logger.error("Failed to collect stories")
-     []
-    end
 	end
 
   def map_reduce(collection, function) do
@@ -101,7 +96,6 @@ An agent responsible for retrieving top stories from Hacker News
 								end) 
     |> Enum.map(fn(pid) ->  
 									receive do { ^pid, result } -> 
-											Logger.debug("Reducing: #{result}")
 											result 
 									end 
 								end)
