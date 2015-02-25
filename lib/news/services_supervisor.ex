@@ -18,7 +18,7 @@ It is supervised by the Phoenix supervisor.
 	@spec init(any) :: {:ok, tuple}
 	def init(_) do
 		children = [	
-								 worker(News.Hacker, []), # An Agent retrieving news
+								 worker(News.Desk, []), # An Agent retrieving news
 								 worker(News.Translation, []) # A GenServer acting as a translation agency
 					   ]
 		opts = [strategy: :one_for_one]

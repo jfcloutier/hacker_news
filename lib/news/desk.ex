@@ -1,4 +1,4 @@
-defmodule News.Hacker do
+defmodule News.Desk do
 	@moduledoc """
 An agent responsible for retrieving top stories from Hacker News via Firebase 
 and for farming out the translation of the story titles to a group of translator nodes.
