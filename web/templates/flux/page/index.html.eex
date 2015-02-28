@@ -2,7 +2,6 @@
   <h2>Hacker News Translator</h2>
 </div>
 
-<div>
-  TBD
-</div>
+<div id="app"/>
+<script src="/js/flux/bundle.js"></script>
 

@@ -108,7 +108,7 @@ and for farming out the translation of the story titles to a group of translator
 		%{"id" => @failed, "url" => "", "title" => "Failed to retrieve story", "score" => 0}
   end
 
-  # Parallel mapping of a function on a collection. Results are nonetheless collected in order.
+  # Parallel mapping of a function on a collection. Results are collected in same order.
   defp map_reduce(collection, function) do
     me = self
     collection
