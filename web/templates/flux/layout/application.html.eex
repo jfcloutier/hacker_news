@@ -10,7 +10,7 @@
     <title>Hacker News Translator</title>
 
     <link rel="stylesheet" href="/css/phoenix.css">
-  </head>
+    <link rel="stylesheet" href="/css/flux/react-spinner.css"> </head>
 
   <body>
     <div class="container">

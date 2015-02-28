@@ -7,10 +7,12 @@ window.React = React // to make it available from the console for debugging
 var constants = {
     REFRESH_NEWS: "REFRESH_NEWS",
     CLEAR_NEWS: "CLEAR_NEWS",
+    // https://cloud.google.com/translate/v2/using_rest#language-params
     LANGUAGES: [
     {name: 'English', symbol: 'en'},
     {name: 'Spanish', symbol: 'es'},
     {name: 'French',  symbol: 'fr'},
+    {name: 'Italian',  symbol: 'it'},
     {name: 'German',  symbol: 'de'},
     {name: 'Russian', symbol: 'ru'},
     {name: 'Chinese', symbol: 'zh-CN'} 
@@ -21,15 +23,17 @@ var constants = {
 var NewsStore = Fluxxor.createStore({
     initialize: function() {
 	this.news = [];
+	this.loading = false;
 
         this.bindActions(
 	    constants.REFRESH_NEWS, this.onRefreshNews,
  	    constants.CLEAR_NEWS, this.onClearNews
         );
     },
-    
+
     onRefreshNews: function(payload) {
         this.loadNews(payload.count, payload.language);
+        this.emit("change");
     },
 
     onClearNews: function() {
@@ -38,22 +42,26 @@ var NewsStore = Fluxxor.createStore({
     },
 
     getState: function() {
-    	return {news: this.news};
+    	return {loading: this.loading, news: this.news};
     },
 
     loadNews: function(count, language) {
+       var store = this.flux.stores.NewsStore;
+       store.loading = true;
        JQuery.ajax({
         url: constants.URL + "?count=" + count + "&language=" + language.symbol,
         dataType: 'json',
 	success: function(stories) {
-		   var store = this.flux.stores.NewsStore;
 		   store.news = stories;
+                   store.loading = false;
 		   store.emit("change");
                  }.bind(this),
         error: function(xhr, status, err) {
 	       if (console && console.log) {
    	          console.log("[LOAD FAILED]", status, err.toString());
   	       }
+               store.loading = false;
+               store.emit("change");
 	}.bind(this)
        });
     }
@@ -115,13 +123,17 @@ var Application = React.createClass({displayName: "Application",
         React.createElement("input", {type: "submit", value: "Go", style: {float: "right"}})
     ), 
     React.createElement("div", {style: {margin: "10px 0 20px 0"}}, 
-      React.createElement("ul", null, 
-        this.state.news.map(function(story, i) {
-          return ( // parenthesis required for JSX to work
-              React.createElement("li", {key: i}, 
-	        React.createElement(NewsItem, {story: story})
-	      ));
-        })
+      this.state.loading
+         ? (React.createElement("img", {src: "/images/ajax-loader.gif", alt: "loader"}))
+         : null, 
+      
+       React.createElement("ul", null, 
+             this.state.news.map(function(story, i) {
+              return ( // parenthesis required for JSX to work
+               React.createElement("li", {key: i}, 
+	           React.createElement(NewsItem, {story: story})
+	     	    ));
+       	       })
       )
     )
   )
