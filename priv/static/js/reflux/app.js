@@ -25,7 +25,8 @@ var Actions = { refreshNews: Reflux.createAction({asyncResult: true}),
 
 
 var NewsStore = Reflux.createStore({
-    listenables: [Actions], // callbacks automatically generated, including for sub-actions (e.g. completed and failed)
+    listenables: [Actions], // callbacks automatically generated, 
+    		 	    // including for sub-actions (e.g. completed and failed)
 
     getInitialState: function() {
         this.news = [];
@@ -53,7 +54,6 @@ var NewsStore = Reflux.createStore({
     },
 
     onRefreshNewsCompleted: function(response) {
-       console.log("Completed response: ", response);
        var update = JSON.parse(response.text);
        this.news = update;
        this.loading = false;
@@ -121,12 +121,8 @@ var Application = React.createClass({displayName: "Application",
     );
   },
 
-  isSelected: function(language) {
-    return this.state.language == language;
-  },
-
   handleNewsCountChange: function(e) {
-  	this.setState({count: e.target.value, language: this.state.language});		 	  
+  	this.setState({count: e.target.value});		 	  
   },
 
   handleNewsLanguageChange: function(e) {
@@ -134,7 +130,7 @@ var Application = React.createClass({displayName: "Application",
         var language = Constants.languages.filter( 
 	    	       	    function(lang, index, array) { return lang.symbol == s; }
 			)[0];
- 	this.setState({count: this.state.count, language: language});
+ 	this.setState({language: language});
  },
 
   onSubmitForm: function(e) {
