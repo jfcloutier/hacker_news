@@ -1,0 +1,7 @@
+<div class="jumbotron">
+  <h2>Hacker News Translator</h2>
+</div>
+
+<div id="app"/>
+<script src="/js/fluxxor/bundle.js"></script>
+

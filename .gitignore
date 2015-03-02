@@ -4,5 +4,9 @@ erl_crash.dump
 *.ez
 *.key
 *.*~
-/priv/static/js/flux/.module-cache
-/priv/static/js/flux/node_modules
+*.*#
+*.#*
+/priv/static/js/fluxxor/.module-cache
+/priv/static/js/fluxxor/node_modules
+/priv/static/js/reflux/.module-cache
+/priv/static/js/reflux/node_modules

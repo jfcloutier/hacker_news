@@ -3,5 +3,5 @@
 </div>
 
 <div id="app"/>
-<script src="/js/flux/bundle.js"></script>
+<script src="/js/reflux/bundle.js"></script>
 

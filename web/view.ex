@@ -1,6 +1,6 @@
 defmodule News.View do
 
-  use Phoenix.View, root: "web/templates/flux" # Change this to switch to alternate templating
+  use Phoenix.View, root: "web/templates/reflux" # Change this to switch to alternate templating (ng, fluxxor or reflux)
 
   # The quoted expression returned by this block is applied
   # to this module and all other views that use this module.
