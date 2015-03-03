@@ -25524,13 +25524,19 @@ var Constants = {
     url: "/api/stories"
 };
 
-var Actions = { refreshNews: Reflux.createAction({asyncResult: true}),
+var Actions = { refreshNews: Reflux.createAction({asyncResult: true}), // creates async sub-actions completed and failed
                	clearNews : Reflux.createAction() };
 
 
 var NewsStore = Reflux.createStore({
     listenables: [Actions], // callbacks automatically generated, 
-    		 	    // including for sub-actions (e.g. completed and failed)
+    		 	    // including for async sub-actions completed and failed
+
+    init: function() { 
+        // Will automatically call trigger completed or failed sub-actions
+        // which will execute the default callbacks on success (promise().then(...).catch(...)
+        Actions.refreshNews.listenAndPromise(this.loadNews);
+    },
 
     getInitialState: function() {
         this.news = [];
@@ -25542,12 +25548,20 @@ var NewsStore = Reflux.createStore({
         return {news: this.news, loading: this.loading};
     },
 
-    onRefreshNews: function(payload) {
-        this.loading = true;
-        Request
+    loadNews: function(payload) {
+       this.loading = true;
+       this.trigger(this.getState());
+       return Request
 		.get(Constants.url)
 		.query({count: payload.count, language: payload.language.symbol})
-                .promise()
+                .promise(); 
+    },
+
+/*
+// Now implied by listenAndPromise in this.init
+    onRefreshNews: function(payload) {
+        this.loading = true;
+        this.loadNews(payload)
 		.then(function(response) {
 		   Actions.refreshNews.completed(response);
 		 })
@@ -25556,10 +25570,10 @@ var NewsStore = Reflux.createStore({
                  });
         this.trigger(this.getState());
     },
+*/
 
     onRefreshNewsCompleted: function(response) {
-       var update = JSON.parse(response.text);
-       this.news = update;
+       this.news = JSON.parse(response.text);
        this.loading = false;
        this.trigger(this.getState());
     },
@@ -25589,10 +25603,10 @@ var Application = React.createClass({displayName: "Application",
   },
 
   render: function() {
-    return ( // parenthesis required for JSX to work
+    return ( // parenthesis required by JSX
   React.createElement("div", null, 
     React.createElement("form", {onSubmit: this.onSubmitForm}, 
-         "Get me the to", '\u00A0', 
+         "Get me the top", '\u00A0', 
          React.createElement("input", {type: "number", 
 			  step: "1", 
 			  min: "0", 

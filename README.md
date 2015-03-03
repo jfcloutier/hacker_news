@@ -15,6 +15,15 @@ To start:
 3. Visit `localhost:4000` from your browser.
 
 
+To switch between the three alternate template implementations, modify web/view.ex
+
+defmodule News.View do
+
+  use Phoenix.View, root: "web/templates/reflux" # Change this to switch to alternate templating (ng, fluxxor or reflux)
+....
+
+The alternatives are web/template/ng, web/template/fluxxor and web/template/reflux (the default)
+
 JSEX 2.0 bug
 ============
 
