@@ -1,5 +1,7 @@
 var React = require("react"),
     Reflux = require("reflux"),
+    Immutable = require("immutable"),
+    ImmutableRenderMixin = require('react-immutable-render-mixin'),
     Request = require("superagent");
 
 require('superagent-bluebird-promise');
@@ -35,7 +37,7 @@ var NewsStore = Reflux.createStore({
     },
 
     getInitialState: function() {
-        this.news = [];
+        this.news = Immutable.List();
         this.loading = false;
 	return this.getState();
     },
@@ -69,7 +71,7 @@ var NewsStore = Reflux.createStore({
 */
 
     onRefreshNewsCompleted: function(response) {
-       this.news = JSON.parse(response.text);
+       this.news = Immutable.List(JSON.parse(response.text));
        this.loading = false;
        this.trigger(this.getState());
     },
@@ -90,7 +92,8 @@ var NewsStore = Reflux.createStore({
 
 var Application = React.createClass({displayName: "Application",
 
-  mixins: [Reflux.connect(NewsStore, "newsState")], // the store's state will be automagically added 
+  mixins: [ImmutableRenderMixin,
+  	   Reflux.connect(NewsStore, "newsState")], // the store's state will be automagically added 
                                                     // to the component's state and kept up-to-date
 
   getInitialState: function() {
@@ -99,6 +102,14 @@ var Application = React.createClass({displayName: "Application",
   },
 
   render: function() {
+    var itemsList =  
+             this.state.newsState.news.toArray().map(function(story, i) {
+              return (
+               React.createElement("li", {key: i}, 
+	           React.createElement(NewsItem, {story: story})
+	     	    ));
+       	       });
+    console.log("itemslist", itemsList);
     return ( // parenthesis required by JSX
   React.createElement("div", null, 
     React.createElement("form", {onSubmit: this.onSubmitForm}, 
@@ -122,14 +133,7 @@ var Application = React.createClass({displayName: "Application",
          ? (React.createElement("img", {src: "/images/ajax-loader.gif", alt: "loader"}))
          : null, 
       
-       React.createElement("ul", null, 
-             this.state.newsState.news.map(function(story, i) {
-              return ( // parenthesis required for JSX to work
-               React.createElement("li", {key: i}, 
-	           React.createElement(NewsItem, {story: story})
-	     	    ));
-       	       })
-      )
+      React.createElement("ul", null, itemsList)
     )
   )
     );

@@ -1,5 +1,7 @@
 var React = require("react"),
     Reflux = require("reflux"),
+    Immutable = require("immutable"),
+    ImmutableRenderMixin = require("react-immutable-render-mixin"),
     Request = require("superagent");
 
 require('superagent-bluebird-promise');
@@ -35,7 +37,7 @@ var NewsStore = Reflux.createStore({
     },
 
     getInitialState: function() {
-        this.news = [];
+        this.news = Immutable.List();
         this.loading = false;
 	return this.getState();
     },
@@ -69,7 +71,7 @@ var NewsStore = Reflux.createStore({
 */
 
     onRefreshNewsCompleted: function(response) {
-       this.news = JSON.parse(response.text);
+       this.news = Immutable.List(JSON.parse(response.text));
        this.loading = false;
        this.trigger(this.getState());
     },
@@ -90,7 +92,8 @@ var NewsStore = Reflux.createStore({
 
 var Application = React.createClass({
 
-  mixins: [Reflux.connect(NewsStore, "newsState")], // the store's state will be automagically added 
+  mixins: [ImmutableRenderMixin,
+  	   Reflux.connect(NewsStore, "newsState")], // the store's state will be automagically added 
                                                     // to the component's state and kept up-to-date
 
   getInitialState: function() {
@@ -99,6 +102,13 @@ var Application = React.createClass({
   },
 
   render: function() {
+    var itemsList =  
+             this.state.newsState.news.toArray().map(function(story, i) {
+              return (
+               <li key={i}>
+	           <NewsItem story={story} />
+	     	    </li>);
+       	       });
     return ( // parenthesis required by JSX
   <div>
     <form onSubmit={this.onSubmitForm}>
@@ -122,14 +132,7 @@ var Application = React.createClass({
          ? (<img src="/images/ajax-loader.gif" alt="loader"/>)
          : null
       }
-       <ul>  
-             {this.state.newsState.news.map(function(story, i) {
-              return ( // parenthesis required for JSX to work
-               <li key={i}>
-	           <NewsItem story={story} />
-	     	    </li>);
-       	       })}  
-      </ul>     
+      <ul>{itemsList}</ul>       
     </div> 
   </div>
     );
