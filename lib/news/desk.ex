@@ -50,8 +50,8 @@ and for farming out the translation of the story titles to a group of translator
 		Agent.get_and_update(@name, 
 												 fn({time, stories}) ->
 													 if Time.elapsed(time, :mins) > @shelf_life do
-														 fresh_stories = fetch_top_story_ids
-														 {fresh_stories, {Time.now, fetch_top_story_ids()}}
+														 fresh_stories = fetch_top_story_ids()
+														 {fresh_stories, {Time.now, fresh_stories}}
 													 else
 														 {stories, {time,stories}}
 													 end

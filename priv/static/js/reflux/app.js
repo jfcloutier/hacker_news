@@ -1,7 +1,7 @@
 var React = require("react"),
     Reflux = require("reflux"),
     Immutable = require("immutable"),
-    ImmutableRenderMixin = require('react-immutable-render-mixin'),
+    ImmutableRenderMixin = require("react-immutable-render-mixin"),
     Request = require("superagent");
 
 require('superagent-bluebird-promise');
@@ -102,14 +102,6 @@ var Application = React.createClass({displayName: "Application",
   },
 
   render: function() {
-    var itemsList =  
-             this.state.newsState.news.toArray().map(function(story, i) {
-              return (
-               React.createElement("li", {key: i}, 
-	           React.createElement(NewsItem, {story: story})
-	     	    ));
-       	       });
-    console.log("itemslist", itemsList);
     return ( // parenthesis required by JSX
   React.createElement("div", null, 
     React.createElement("form", {onSubmit: this.onSubmitForm}, 
@@ -133,7 +125,14 @@ var Application = React.createClass({displayName: "Application",
          ? (React.createElement("img", {src: "/images/ajax-loader.gif", alt: "loader"}))
          : null, 
       
-      React.createElement("ul", null, itemsList)
+      React.createElement("ul", null, 
+	this.state.newsState.news.toArray().map(function(story, i) {
+              return (
+               React.createElement("li", {key: i}, 
+	           React.createElement(NewsItem, {story: story})
+	     	    ));
+       	       })
+      )
     )
   )
     );

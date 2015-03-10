@@ -24,6 +24,19 @@ defmodule News.View do
 
 The alternatives are web/template/ng, web/template/fluxxor and web/template/reflux (the default)
 
+ReactJS templates
+=================
+
+To translate .jsx files to .js:
+   1. make sure jsx support is installed (via npm install jsx)
+   2. cd to the directory where the jsx files are
+   3. jsx -x jsx ./ ./ 
+
+To collate the app's .js file and the js it requires into a bundle.js
+   1. make sure browserify is installed (via npm install browserify)
+   2. cd to the directory where the js file is
+   3. browserify app.js -o bundle.js
+
 JSEX 2.0 bug
 ============
 

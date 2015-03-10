@@ -102,13 +102,6 @@ var Application = React.createClass({
   },
 
   render: function() {
-    var itemsList =  
-             this.state.newsState.news.toArray().map(function(story, i) {
-              return (
-               <li key={i}>
-	           <NewsItem story={story} />
-	     	    </li>);
-       	       });
     return ( // parenthesis required by JSX
   <div>
     <form onSubmit={this.onSubmitForm}>
@@ -132,7 +125,14 @@ var Application = React.createClass({
          ? (<img src="/images/ajax-loader.gif" alt="loader"/>)
          : null
       }
-      <ul>{itemsList}</ul>       
+      <ul>
+	{this.state.newsState.news.toArray().map(function(story, i) {
+              return (
+               <li key={i}>
+	           <NewsItem story={story} />
+	     	    </li>);
+       	       })}
+      </ul>       
     </div> 
   </div>
     );
